@@ -31,3 +31,6 @@ A AI automation project that acts as an academic assistant for IT students...
 - edit the apis for google
 - edit the apis for meta
 - edit the apis for pinecone
+
+## WORKFLOW/ DIAGRAM
+<img width="406" height="702" alt="491081916-72e360b1-2ba3-4fa9-be91-fa3e7d5b1616" src="https://github.com/user-attachments/assets/e39ead09-f1ba-44eb-ac6d-ee33814068cc" />
