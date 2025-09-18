@@ -26,3 +26,8 @@ A AI automation project that acts as an academic assistant for IT students...
 - Add quiz/test prep
 - Integrate with Google Drive for auto-updates
 -generate pictures
+
+## IMPORT ON N8N
+-edit the apis for google
+-edit the apis for meta
+-edit the apis for pinecone
