@@ -1,0 +1,272 @@
+{
+  "name": "raggg",
+  "nodes": [
+    {
+      "parameters": {
+        "multipleMethods": true,
+        "path": "a703990a-bd22-468f-9f4f-df7e0ae05d03",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -16,
+        112
+      ],
+      "id": "19d17ab0-8c17-4035-8e4a-36b65036bc4d",
+      "name": "Webhook",
+      "webhookId": "a703990a-bd22-468f-9f4f-df7e0ae05d03"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ff009e7c-ac02-4f5d-9beb-98de19881b66",
+              "leftValue": "={{ $json.query['hub.mode'] }}",
+              "rightValue": "subscribe",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "95cfc4df-e37b-4c52-bc2d-0b56151d2516",
+              "leftValue": "={{ $json.query['hub.verify_token'] }}",
+              "rightValue": "ccs",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "3a7547c7-182c-40e1-96bd-7d2e89a7b7bd",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.query['hub.challenge'] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        416,
+        -96
+      ],
+      "id": "6fe9fc5d-59d3-4ff6-8610-5b36d3a5e53d",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=User question: {{$json.body.entry[0].messaging[0].message.text}}\nUse the retrieved knowledge to answer if available.",
+        "options": {
+          "systemMessage": "You are a helpful assistant for an IT student. your job is to answer IT student question. without using quotation marks on answer. avoid using \\n. you have access information on RAG question in terms of general informaton about IT "
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        192,
+        208
+      ],
+      "id": "91e85eda-49ee-4199-a7fa-94c898f53e75",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        64,
+        416
+      ],
+      "id": "23566bea-d75b-40c7-ac23-bfa86831860c",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "nbsdfrhwH9uS8Hoj",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.body.entry[0].messaging[0].sender.id }}",
+        "contextWindowLength": 50
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        432
+      ],
+      "id": "59c02798-3ee8-427c-9600-068dea2ee70e",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v23.0/{{ $('Webhook').item.json.body.entry[0].messaging[0].recipient.id }}/messages?access_token=EAAmJYKEFoI8BPSVATvzuPhvv4ynSqrHqgHP1uDEqSeTbd7ZC7jPxwYswWZCDGCRQZA1C0ML9oxUmtYnE7jIECfvZAbJ7CZBvzreSEcDBKANLWJNNdeGlknyEliXezq13ml9qLEadYkCH8BZBHJzKp7s6ZBgsx8gBlAWl4iBZCtZBgxX1JvV9xP0frdgHBr0ZAmoufYSIcUkcDI",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"recipient\": {\n    \"id\": \"{{ $('Webhook').item.json.body.entry[0].messaging[0].sender.id }}\"\n  },\n  \"messaging_type\": \"RESPONSE\",\n  \"message\": {\n    \"text\": \"{{ $json.output || 'Fallback reply' }}\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        544,
+        208
+      ],
+      "id": "3f5a9212-323b-4737-a694-d0b4d6e0027e",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://prod-1-data.ke.pinecone.io/assistant/chat/chatbot-ccs",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Api-Key",
+              "value": "pcsk_M7qFG_wXhUsMs6aSToAWYYFd6TfU8u9CJ92UEH9UWWD94MDXWZ26CdS3MH2jeUnmSUJC"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Pinecone-API-Version",
+              "value": "2025-04"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"={{ $json.body.entry[0].messaging[0].message.text }}\"\n    }\n  ],\n  \"model\": \"gpt-4o\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        432
+      ],
+      "id": "710ca2f5-1c25-4384-a737-d1970b3b44a5",
+      "name": "RAG question"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RAG question": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "4d414d00-3847-46bc-a32b-49c71a3b00ed",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8b1cfbd7eefbeb4735ae0b44eb7422f908d48d10f2e227f7e41f381ce21648bd"
+  },
+  "id": "4QKLJimJbLu9QxLW",
+  "tags": []
+}
